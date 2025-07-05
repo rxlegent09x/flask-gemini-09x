@@ -148,7 +148,7 @@
             appendMessage('person', text);
             userInput.value = '';
 
-            fetch('https://gemini-init-flask.onrender.com/chat', {
+            fetch('http://localhost:8000/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type':'text/plain'
