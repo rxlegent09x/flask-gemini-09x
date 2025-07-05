@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI-Person Two-Sided Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --ai: #388e3c;
+            --bg: #f4f4f4;
+            --container-bg: #fff;
+            --msg-bg-person: #e3f0fd;
+            --msg-bg-ai: #e6f4ea;
+            --border: #ddd;
+            --shadow: 0 2px 8px #ccc;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            min-height: 100vh;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 450px;
+            margin: 40px auto;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px 12px 16px 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 70vh;
+        }
+        #messages {
+            flex: 1 1 auto;
+            min-height: 250px;
+            max-height: 50vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .msg {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 16px;
+            max-width: 80%;
+            word-break: break-word;
+            font-size: 1rem;
+            display: inline-block;
+            clear: both;
+        }
+        .person {
+            background: var(--msg-bg-person);
+            color: var(--primary);
+            align-self: flex-start;
+            text-align: left;
+            float: left;
+        }
+        .ai {
+            background: var(--msg-bg-ai);
+            color: var(--ai);
+            align-self: flex-end;
+            text-align: right;
+            float: right;
+        }
+        #input-area {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            background: #f9f9f9;
+            transition: border 0.2s;
+        }
+        #user-input:focus {
+            border: 1.5px solid var(--primary);
+        }
+        #send-btn {
+            padding: 10px 18px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #send-btn:hover {
+            background: #155ab6;
+        }
+        @media (max-width: 600px) {
+            #chat-container {
+                max-width: 98vw;
+                padding: 10px 2vw 10px 2vw;
+                min-height: 60vh;
+            }
+            #messages {
+                min-height: 180px;
+                max-height: 40vh;
+                padding: 8px;
+            }
+            .msg {
+                font-size: 0.97rem;
+                padding: 7px 10px;
+            }
+            #send-btn, #user-input {
+                font-size: 0.97rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <form id="input-area" autocomplete="off">
+            <input type="text" id="user-input" placeholder="Type your message..." required />
+            <button type="submit" id="send-btn">Send</button>
+        </form>
+    </div>
+    <script>
+        const messages = document.getElementById('messages');
+        const form = document.getElementById('input-area');
+        const userInput = document.getElementById('user-input');
+
+        function appendMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg ' + sender;
+            msgDiv.textContent = (sender === 'person' ? 'You: ' : 'AI: ') + text;
+            messages.appendChild(msgDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+            appendMessage('person', text);
+            userInput.value = '';
+
+            fetch('https://gemini-init-flask.onrender.com/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type':'text/plain'
+                },
+                body: (text)
+            })
+            .then(response => response.text())
+            .then(data => {
+                if (data) {
+                    appendMessage('ai', data);
+                } else {
+                    appendMessage('ai', "Sorry, I didn't understand that.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                appendMessage('ai', "Error communicating with AI service.");
+            }); 
+        });
+    </script>
+</body>
+</html>
